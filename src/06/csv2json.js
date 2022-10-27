@@ -23,6 +23,7 @@ const convCsvJson = function(file) {
 
 const readSync = function(fileName) {
 
+
     console.log('Source Filename: ' + fileName)
     
     let stat = fs.statSync(fileName, 'utf8')
@@ -47,14 +48,25 @@ const writeSync = function(fileName, file) {
     let timePre = new Date()
 
     let json = convCsvJson(file)
-    fs.writeSync(fileName, json)
 
-    let timePost = new Date()
-    console.log('file process duration (ms): ' + (timePost - timePre))
+    fs.open(fileName,'w', (err, fd) => { 
+
+        fs.writeSync(fd, json)
+    
+        let timePost = new Date()
+        console.log('file process duration (ms): ' + (timePost - timePre))
+    })
     
 }
 
 const readWriteAsync = function(fileName, targetFileName) {
+
+    console.log('Source Filename: ' + fileName)
+    
+    fs.stat(fileName, 'utf8', (err, stat) => {
+        console.log('Size: ' + stat.size)
+        console.log('Last Change Time: ' + stat.ctime)
+    })
 
     let timePre = new Date()
 
@@ -63,6 +75,7 @@ const readWriteAsync = function(fileName, targetFileName) {
         if (err) throw err
 
         let timePost = new Date()
+        console.log('Length (entries): ' + file.split('\n').length)
         console.log('readFile duration (ms): ' + (timePost - timePre))
 
         writeAsync(targetFileName, file)
@@ -92,5 +105,7 @@ const dir = 'csv/'
 const sourceFileName = dir + process.argv[2]
 const targetFileName = dir + process.argv[3]
 
-//writeSync(targetFileName, readSync(sourceFileName))
+console.log('// sync')
+writeSync(targetFileName, readSync(sourceFileName))
+console.log('// async')
 readWriteAsync(sourceFileName, targetFileName)
