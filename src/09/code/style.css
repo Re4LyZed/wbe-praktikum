@@ -1,0 +1,36 @@
+div {
+    box-sizing: border-box;
+}
+
+.board {
+    width: 98vh;
+    height: 84vh;
+    margin: auto;
+    outline: 1px solid black;
+}
+
+.board .field {
+    border: 1px solid black;
+    width: 14vh;
+    height: 14vh;
+    float: left;
+}
+
+.board .field:first-child {
+    display: block;
+}
+
+.board .field .piece {
+    width: 12vh;
+    height: 12vh;
+    border-radius: 50%;
+    margin: 1vh;
+}
+
+.board .field .blue {
+    background-color: blue;
+}
+
+.board .field .red {
+    background-color: red;
+}
