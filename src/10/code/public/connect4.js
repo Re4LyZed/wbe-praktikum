@@ -108,8 +108,11 @@ function playGame(fieldList, fieldListIndex) {
         updateView(fieldList)
 
         if (connect4Winner(playerTurn[0], state.board)) {
-            alert("GAME OVER: " + playerTurn + " won!")
-            initGame()
+            // quick delay to ensure the view is updated
+            setTimeout(() => {
+                alert("GAME OVER: " + playerTurn + " won!")
+                initGame()
+            }, 1);
         }
     }
 }
