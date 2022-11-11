@@ -52,7 +52,12 @@ app.use(express.json())
 var apiKeys = ['wbeweb', 'c4game']
 
 //  unsere tolle in-memory Datenbank :)
-var data = {1234567890: {demodata: "wbe is an inspiring challenge"}}
+var data = {
+  c4state: {
+      board: Array(6).fill('').map(() => Array(7).fill('')),
+      nextPlayerTurn: 'blue'
+  }
+}
 
 //  GET-Request bearbeiten
 //
