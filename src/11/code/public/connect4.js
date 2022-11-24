@@ -9,26 +9,13 @@ const RED = 'red'
 
 const SERVICE = "http://localhost:3000/api/data/c4state?api-key=c4game"
 
+const JSDON_FIELD_INIT = ["div", { class: "field" }]
+const JSDON_FIELD_VAR = ["div"]
+
 // local game state
 let state = {
     board: undefined,
     nextPlayerTurn: undefined
-}
-
-function elt(type, attrs, ...children) {
-
-    let node = document.createElement(type)
-
-    for (a in attrs) {
-        node.setAttribute(a, attrs[a])
-    }
-
-    for (let child of children) {
-        if (typeof child != "string") node.appendChild(child)
-        else node.appendChild(document.createTextNode(child))
-    }
-
-    return node
 }
 
 function initBoard(board) {
@@ -36,7 +23,7 @@ function initBoard(board) {
     board.replaceChildren([])
 
     for (let index = 0; index < BOARD_TOT; index++) {
-        board.appendChild(elt("div", { class: "field" }))
+        renderSJDON(JSDON_FIELD_INIT, board)
     }
 }
 
@@ -93,7 +80,7 @@ function setBoard(fieldList) {
                 field.children[0].setAttribute("class", state.board[row][col])
             } else {
                 // add piece
-                field.appendChild(elt("div", { class: state.board[row][col] }))
+                renderSJDON([...JSDON_FIELD_VAR, { class: state.board[row][col] }], field)
             }
         }
     }
