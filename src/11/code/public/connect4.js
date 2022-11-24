@@ -12,6 +12,8 @@ const SERVICE = "http://localhost:3000/api/data/c4state?api-key=c4game"
 const JSDON_FIELD_INIT = ["div", { class: "field" }]
 const JSDON_FIELD_VAR = ["div"]
 
+const LOCAL_STORAGE_STATE = "state"
+
 // local game state
 let state = {
     board: undefined,
@@ -156,9 +158,31 @@ function attachEventHandler(board) {
 }
 
 
-//  Get current state from server and re-draw board
+//  Get current state from localStorage and re-draw board
 //
 function loadState() {
+
+    let localState = localStorage.getItem(LOCAL_STORAGE_STATE)
+
+    if (localState != null) {
+        state = JSON.parse(localState)
+        updateView(document.querySelector(".board").children)
+        alert("Game loaded!")
+    }
+}
+
+//  Put current state to localStorage
+//
+function saveState() {
+
+    localStorage.setItem(LOCAL_STORAGE_STATE, JSON.stringify(state))
+    alert("Game saved!")
+}
+
+
+//  Get current state from server and re-draw board
+//
+function loadStateServer() {
 
     fetch(SERVICE)
         .then(response => response.json())
@@ -171,7 +195,7 @@ function loadState() {
 
 //  Put current state to server
 //
-function saveState() {
+function saveStateServer() {
 
     fetch(SERVICE, {
         method: 'PUT',
@@ -186,3 +210,17 @@ function saveState() {
 function newGame() {
     initGame()
 }
+
+//  Event: DOMContentLoaded
+//
+document.addEventListener("DOMContentLoaded", function (event) {
+
+    // enable server load/save when service could be reached
+    fetch(SERVICE)
+        .then(() => {
+            let buttonLoadStateServer = document.getElementById("loadStateServer")
+            buttonLoadStateServer.removeAttribute("hidden")
+            let buttonSaveStateServer = document.getElementById("saveStateServer")
+            buttonSaveStateServer.removeAttribute("hidden")
+        })
+})

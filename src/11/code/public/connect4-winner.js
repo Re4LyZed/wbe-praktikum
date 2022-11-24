@@ -41,5 +41,3 @@ const connect4Winner = function (player, board) {
 
     return false
 }
-
-module.exports = { connect4Winner }

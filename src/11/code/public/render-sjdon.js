@@ -45,5 +45,3 @@ const renderSJDON = function (element, appRoot) {
         return { type: type, value: value, attrs: attrs, children: children }
     }
 }
-
-module.exports = { renderSJDON }
