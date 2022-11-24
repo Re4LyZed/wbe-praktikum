@@ -9,7 +9,7 @@ function deserialize(element) {
         if (Array.isArray(element)) {
             children.push(element)
         } else if (typeof element === 'object') {
-            attrs = element
+            attrs = {...attrs, ...element}
         } else if (element != type) {
             value = element
         }
@@ -23,6 +23,8 @@ function renderSJDON(element, appRoot) {
 }
 
 function elt(element) {
+
+    // note: SJDON for functions not implemented
 
     let eleObj = deserialize(element)
 
@@ -47,7 +49,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
         ["div", { style: "background: salmon" },
             ["h1", "Hello World"],
             ["h2", { style: "text-align:right", id: "funh2" }, "from our library"],
-            ["h3", "untertitel", { style: "text-align:right", id: "funh3" }],
+            ["h3", "untertitel", { style: "text-align:right"}, {id: "funh3" }],
             ["ul", ["li", "eins"], ["li", "zwei"]]]
 
     let appRoot = document.getElementById("app")
