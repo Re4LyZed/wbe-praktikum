@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vier gewinnt</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="connect4-winner.js"></script>
+  <script src="connect4.js"></script>
+</head>
+
+<body>
+
+  <div class="board"></div>
+
+  <div class="controls">
+    <p>Next player: <strong id="nextPlayerTurn"></strong></p>
+    <button onclick="loadState()">Load</button>
+    <button onclick="saveState()">Save</button>
+    <button onclick="newGame()">New Game</button>
+  </div>
+
+  <script>
+    initGame()
+  </script>
+
+</body>
+
+</html>
