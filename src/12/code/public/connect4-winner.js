@@ -1,7 +1,7 @@
 const BOARD_ROW_MAX = 7
 const BOARD_COL_MAX = 6
 
-const connect4Winner = function (player, board) {
+export const connect4Winner = function (player, board) {
 
     // horizontal
     for (let j = 0; j < BOARD_ROW_MAX - 3 ; j++ ) {

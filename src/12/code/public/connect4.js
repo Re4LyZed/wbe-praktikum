@@ -1,3 +1,6 @@
+import { connect4Winner } from "./connect4-winner.js"
+import { render } from "./lib/suiweb.js"
+
 const BOARD_ROW = 6
 const BOARD_COL = 7
 const BOARD_TOT = BOARD_ROW * BOARD_COL
@@ -9,24 +12,44 @@ const RED = 'red'
 
 const SERVICE = "http://localhost:3000/api/data/c4state?api-key=c4game"
 
-const JSDON_FIELD_INIT = ["div", { class: "field" }]
-const JSDON_FIELD_VAR = ["div"]
-
 const LOCAL_STORAGE_STATE = "state"
+
+// SuiWeb - Begin
+const App = () => [
+    "wrapper",
+    [Board, { board: state.board }],
+    [Control]
+]
+
+const Board = ({ board }) => {
+    let flatBoard = [].concat(...board)
+    let fields = flatBoard.map((type) => [Field, { type }])
+    return (
+        ["div", { className: "board" }, ...fields]
+    )
+}
+
+const Field = ({ type }) => {
+    return ["div", { className: "field" }, ["div", { className: type }]]
+}
+
+const Control = () => [
+    "div", { className: "controls" },
+        ["p", "Next player:", 
+            ["strong", { id: "nextPlayerTurn" }]
+        ],
+        ["button", { onclick: loadState, id: "loadState" }, "Load"],
+        ["button", { onclick: saveState, id: "saveState" }, "Save"],
+        ["button", { onclick: loadStateServer, id: "loadStateServer", hidden: true }, "Load from Server"],
+        ["button", { onclick: saveStateServer, id: "saveStateServer", hidden: true }, "Save to Server"],
+        ["button", { onclick: newGame, id: "newGame" }, "New Game"]
+]
+// SuiWeb - End
 
 // local game state
 let state = {
     board: undefined,
     nextPlayerTurn: undefined
-}
-
-function initBoard(board) {
-
-    board.replaceChildren([])
-
-    for (let index = 0; index < BOARD_TOT; index++) {
-        renderSJDON(JSDON_FIELD_INIT, board)
-    }
 }
 
 function setState(fieldListIndex) {
@@ -80,9 +103,6 @@ function setBoard(fieldList) {
             if (field.children.length > 0) {
                 // update piece
                 field.children[0].setAttribute("class", state.board[row][col])
-            } else {
-                // add piece
-                renderSJDON([...JSDON_FIELD_VAR, { class: state.board[row][col] }], field)
             }
         }
     }
@@ -116,38 +136,47 @@ function updateView(fieldList) {
 //  Initialize game
 //
 function initGame() {
-    let board = showBoard()
-    attachEventHandler(board)
+
+    // init state
+    state = {
+        board: Array(BOARD_ROW).fill(BLANK).map(el => Array(BOARD_COL).fill(BLANK)),
+        nextPlayerTurn: BLUE
+    }
+
+    // showBoard
+    let app = showBoard()
+
+    // attach event handler
+    attachEventHandler(app)
+    
+    // nextPlayerTurn
+    document.getElementById("nextPlayerTurn").textContent = state.nextPlayerTurn
+
+    // enable server load/save when service could be reached
+    fetch(SERVICE)
+        .then(() => {
+            let buttonLoadStateServer = document.getElementById("loadStateServer")
+            buttonLoadStateServer.removeAttribute("hidden")
+            let buttonSaveStateServer = document.getElementById("saveStateServer")
+            buttonSaveStateServer.removeAttribute("hidden")
+        })
 }
 
 
 //  Show board
 // 
 function showBoard() {
-
-    let board = document.querySelector(".board")
-
-    // first remove all fields
-    while (board.firstChild) { board.removeChild(board.firstChild) }
-
-    // init
-    state = {
-        board: Array(BOARD_ROW).fill(BLANK).map(el => Array(BOARD_COL).fill(BLANK)),
-        nextPlayerTurn: BLUE
-    }
-
-    // nextPlayerTurn
-    document.getElementById("nextPlayerTurn").textContent = state.nextPlayerTurn
-
-    initBoard(board)
-
-    return board
+    const app = document.querySelector(".app")
+    render([App], app)
+    return app
 }
 
 
 //  Attach event handler to board
 //
-function attachEventHandler(board) {
+function attachEventHandler(app) {
+
+    let board = app.children[0].children[0]
 
     // event: click - fields
     Array.from(board.children).forEach(element => {
@@ -211,16 +240,4 @@ function newGame() {
     initGame()
 }
 
-//  Event: DOMContentLoaded
-//
-document.addEventListener("DOMContentLoaded", function (event) {
-
-    // enable server load/save when service could be reached
-    fetch(SERVICE)
-        .then(() => {
-            let buttonLoadStateServer = document.getElementById("loadStateServer")
-            buttonLoadStateServer.removeAttribute("hidden")
-            let buttonSaveStateServer = document.getElementById("saveStateServer")
-            buttonSaveStateServer.removeAttribute("hidden")
-        })
-})
+export { initGame }
