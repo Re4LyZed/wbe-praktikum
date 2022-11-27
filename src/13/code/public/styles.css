@@ -38,12 +38,22 @@ div {
 .controls {
   text-align: center;
 }
+
 .controls button {
-  font-size: 1.5rem;
-  margin-top: 1rem;
+  font-size: 1.2rem;
+  margin: 0.5rem;
+  padding: 1rem;
+}
+
+.documentation {
+  text-align: center;
 }
 
 .message {
   text-align: center;
   margin-top: 2em;
+}
+
+#nextPlayerTurn {
+  font-size: 1.5rem;
 }

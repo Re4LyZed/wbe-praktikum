@@ -2,9 +2,12 @@ import { connect4Winner } from "./connect4-winner.js"
 import { setInList, setInObj } from "./immute.js"
 import { render } from "./lib/suiweb.js"
 
+// ---------------------------------------------------------------
+// CONSTANTS
+// ---------------------------------------------------------------
+
 const BOARD_ROW = 6
 const BOARD_COL = 7
-const BOARD_TOT = BOARD_ROW * BOARD_COL
 
 const PIECE = 'piece'
 const BLANK = ''
@@ -15,11 +18,15 @@ const SERVICE = "http://localhost:3000/api/data/c4state?api-key=c4game"
 
 const LOCAL_STORAGE_STATE = "state"
 
+const STATE_BOARD = 'board'
+const STATE_NPT = 'nextPlayerTurn'
+
 // SuiWeb - Begin
 const App = () => [
     "wrapper",
     [Board, { board: state.board }],
-    [Control]
+    [Control],
+    [Documentation]
 ]
 
 const Board = ({ board }) => {
@@ -36,7 +43,7 @@ const Field = ({ type }) => {
 
 const Control = () => [
     "div", { className: "controls" },
-    ["p", "Next player:",
+    ["p", "Next player: ",
         ["strong", { id: "nextPlayerTurn" }]
     ],
     ["button", { onclick: loadState, id: "loadState" }, "Load"],
@@ -46,10 +53,16 @@ const Control = () => [
     ["button", { onclick: newGame, id: "newGame" }, "New Game"],
     ["button", { onclick: undoAction, id: "undoAction" }, "Undo"]
 ]
+
+const Documentation = () => [
+    "div", { className: "documentation" },
+    ["a", { href: "./doc/connect4.pdf" }, "Documentation"]
+]
 // SuiWeb - End
 
-const STATE_BOARD = 'board'
-const STATE_NPT = 'nextPlayerTurn'
+// ---------------------------------------------------------------
+// GLOBALS
+// ---------------------------------------------------------------
 
 // local game state
 let state = {
@@ -60,6 +73,85 @@ let state = {
 // local game state - sequence
 let stateSeq = undefined
 
+// ---------------------------------------------------------------
+// FUNCTIONS
+// ---------------------------------------------------------------
+
+//  Initialize game
+//
+function initGame() {
+
+    // init state & sequence
+    state = {
+        board: Array(BOARD_ROW).fill(BLANK).map(el => Array(BOARD_COL).fill(BLANK)),
+        nextPlayerTurn: BLUE
+    }
+
+    stateSeq = []
+
+    // showBoard
+    let app = showBoard()
+
+    // attach event handler
+    attachEventHandler(app)
+
+    // nextPlayerTurn
+    document.getElementById("nextPlayerTurn").textContent = state.nextPlayerTurn
+
+    // enable server load/save when service could be reached
+    fetch(SERVICE)
+        .then(() => {
+            let buttonLoadStateServer = document.getElementById("loadStateServer")
+            buttonLoadStateServer.removeAttribute("hidden")
+            let buttonSaveStateServer = document.getElementById("saveStateServer")
+            buttonSaveStateServer.removeAttribute("hidden")
+        })
+}
+
+//  Show board
+// 
+function showBoard() {
+    const app = document.querySelector(".app")
+    render([App], app)
+    return app
+}
+
+//  Attach event handler to board
+//
+function attachEventHandler(app) {
+
+    let board = app.children[0].children[0]
+
+    // event: click - fields
+    Array.from(board.children).forEach(element => {
+        element.addEventListener("click", (event) => {
+            playGame(board.children, Array.from(board.children).indexOf(event.target))
+        })
+    })
+}
+
+//  Play game (turn)
+//
+function playGame(fieldList, fieldListIndex) {
+
+    let playerTurn = state.nextPlayerTurn
+
+    if (setState(fieldListIndex)) {
+
+        updateView(fieldList)
+
+        if (connect4Winner(playerTurn[0], state.board)) {
+            // quick delay to ensure the view is updated
+            setTimeout(() => {
+                alert("GAME OVER: " + playerTurn + " won!")
+                initGame()
+            }, 1);
+        }
+    }
+}
+
+//  Set state
+//
 function setState(fieldListIndex) {
 
     // read col
@@ -113,6 +205,17 @@ function setState(fieldListIndex) {
     return true
 }
 
+//  Update View
+//
+function updateView(fieldList) {
+
+    setBoard(fieldList)
+
+    document.getElementById("nextPlayerTurn").textContent = state.nextPlayerTurn
+}
+
+//  Set board
+//
 function setBoard(fieldList) {
 
     for (let row = 0; row < BOARD_ROW; row++) {
@@ -128,86 +231,9 @@ function setBoard(fieldList) {
     }
 }
 
-function playGame(fieldList, fieldListIndex) {
-
-    let playerTurn = state.nextPlayerTurn
-
-    if (setState(fieldListIndex)) {
-
-        updateView(fieldList)
-
-        if (connect4Winner(playerTurn[0], state.board)) {
-            // quick delay to ensure the view is updated
-            setTimeout(() => {
-                alert("GAME OVER: " + playerTurn + " won!")
-                initGame()
-            }, 1);
-        }
-    }
-}
-
-function updateView(fieldList) {
-
-    setBoard(fieldList)
-
-    document.getElementById("nextPlayerTurn").textContent = state.nextPlayerTurn
-}
-
-//  Initialize game
-//
-function initGame() {
-
-    // init state & sequence
-    state = {
-        board: Array(BOARD_ROW).fill(BLANK).map(el => Array(BOARD_COL).fill(BLANK)),
-        nextPlayerTurn: BLUE
-    }
-
-    stateSeq = []
-
-    // showBoard
-    let app = showBoard()
-
-    // attach event handler
-    attachEventHandler(app)
-
-    // nextPlayerTurn
-    document.getElementById("nextPlayerTurn").textContent = state.nextPlayerTurn
-
-    // enable server load/save when service could be reached
-    fetch(SERVICE)
-        .then(() => {
-            let buttonLoadStateServer = document.getElementById("loadStateServer")
-            buttonLoadStateServer.removeAttribute("hidden")
-            let buttonSaveStateServer = document.getElementById("saveStateServer")
-            buttonSaveStateServer.removeAttribute("hidden")
-        })
-}
-
-
-//  Show board
-// 
-function showBoard() {
-    const app = document.querySelector(".app")
-    render([App], app)
-    return app
-}
-
-
-//  Attach event handler to board
-//
-function attachEventHandler(app) {
-
-    let board = app.children[0].children[0]
-
-    // event: click - fields
-    Array.from(board.children).forEach(element => {
-        element.addEventListener("click", (event) => {
-            playGame(board.children, Array.from(board.children).indexOf(event.target))
-        })
-    })
-}
-
+// ---------------------------------------------------------------
+// FUNCTIONS - EVENT
+// ---------------------------------------------------------------
 
 //  Get current state from localStorage and re-draw board
 //
@@ -230,7 +256,6 @@ function saveState() {
     localStorage.setItem(LOCAL_STORAGE_STATE, JSON.stringify(state))
     alert("Game saved!")
 }
-
 
 //  Get current state from server and re-draw board
 //
@@ -259,24 +284,26 @@ function saveStateServer() {
     }).then(alert("Game saved!"))
 }
 
-
 //  Start new game
 //
 function newGame() {
     initGame()
 }
 
-
 //  Undo action
 //
 function undoAction() {
 
     if (stateSeq.length > 0) {
-        state = stateSeq.pop()    
+        state = stateSeq.pop()
         updateView(document.querySelector(".board").children)
     } else {
         alert("Undo not possible!")
     }
 }
+
+// ---------------------------------------------------------------
+// EXPORT
+// ---------------------------------------------------------------
 
 export { initGame }
