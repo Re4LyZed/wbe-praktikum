@@ -1,4 +1,5 @@
 import { connect4Winner } from "./connect4-winner.js"
+import { setInList, setInObj } from "./immute.js"
 import { render } from "./lib/suiweb.js"
 
 const BOARD_ROW = 6
@@ -35,22 +36,29 @@ const Field = ({ type }) => {
 
 const Control = () => [
     "div", { className: "controls" },
-        ["p", "Next player:", 
-            ["strong", { id: "nextPlayerTurn" }]
-        ],
-        ["button", { onclick: loadState, id: "loadState" }, "Load"],
-        ["button", { onclick: saveState, id: "saveState" }, "Save"],
-        ["button", { onclick: loadStateServer, id: "loadStateServer", hidden: true }, "Load from Server"],
-        ["button", { onclick: saveStateServer, id: "saveStateServer", hidden: true }, "Save to Server"],
-        ["button", { onclick: newGame, id: "newGame" }, "New Game"]
+    ["p", "Next player:",
+        ["strong", { id: "nextPlayerTurn" }]
+    ],
+    ["button", { onclick: loadState, id: "loadState" }, "Load"],
+    ["button", { onclick: saveState, id: "saveState" }, "Save"],
+    ["button", { onclick: loadStateServer, id: "loadStateServer", hidden: true }, "Load from Server"],
+    ["button", { onclick: saveStateServer, id: "saveStateServer", hidden: true }, "Save to Server"],
+    ["button", { onclick: newGame, id: "newGame" }, "New Game"],
+    ["button", { onclick: undoAction, id: "undoAction" }, "Undo"]
 ]
 // SuiWeb - End
+
+const STATE_BOARD = 'board'
+const STATE_NPT = 'nextPlayerTurn'
 
 // local game state
 let state = {
     board: undefined,
     nextPlayerTurn: undefined
 }
+
+// local game state - sequence
+let stateSeq = undefined
 
 function setState(fieldListIndex) {
 
@@ -76,19 +84,31 @@ function setState(fieldListIndex) {
 
     // set player value
     let pieceValue
+    let nextPlayerTurn
 
     switch (state.nextPlayerTurn) {
         case RED:
             pieceValue = PIECE.concat(' ', RED)
-            state.nextPlayerTurn = BLUE
+            nextPlayerTurn = BLUE
             break;
         case BLUE:
             pieceValue = PIECE.concat(' ', BLUE)
-            state.nextPlayerTurn = RED
+            nextPlayerTurn = RED
             break;
     }
 
-    state.board[row][col] = pieceValue
+    // state push
+    stateSeq.push(state)
+
+    // state set board
+    state = setInObj(state, STATE_BOARD,
+        setInList(state.board, row,
+            setInList(state.board[row], col, pieceValue)
+        )
+    )
+
+    // state set nextPlayerTurn
+    state = setInObj(state, STATE_NPT, nextPlayerTurn)
 
     return true
 }
@@ -137,18 +157,20 @@ function updateView(fieldList) {
 //
 function initGame() {
 
-    // init state
+    // init state & sequence
     state = {
         board: Array(BOARD_ROW).fill(BLANK).map(el => Array(BOARD_COL).fill(BLANK)),
         nextPlayerTurn: BLUE
     }
+
+    stateSeq = []
 
     // showBoard
     let app = showBoard()
 
     // attach event handler
     attachEventHandler(app)
-    
+
     // nextPlayerTurn
     document.getElementById("nextPlayerTurn").textContent = state.nextPlayerTurn
 
@@ -195,6 +217,7 @@ function loadState() {
 
     if (localState != null) {
         state = JSON.parse(localState)
+        stateSeq = []
         updateView(document.querySelector(".board").children)
         alert("Game loaded!")
     }
@@ -215,7 +238,10 @@ function loadStateServer() {
 
     fetch(SERVICE)
         .then(response => response.json())
-        .then(data => state = data)
+        .then(data => {
+            state = data
+            stateSeq = []
+        })
         .then(() => {
             updateView(document.querySelector(".board").children)
             alert("Game loaded!")
@@ -238,6 +264,19 @@ function saveStateServer() {
 //
 function newGame() {
     initGame()
+}
+
+
+//  Undo action
+//
+function undoAction() {
+
+    if (stateSeq.length > 0) {
+        state = stateSeq.pop()    
+        updateView(document.querySelector(".board").children)
+    } else {
+        alert("Undo not possible!")
+    }
 }
 
 export { initGame }
