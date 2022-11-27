@@ -56,7 +56,7 @@ const Control = () => [
 
 const Documentation = () => [
     "div", { className: "documentation" },
-    ["a", { href: "./doc/connect4.pdf" }, "Documentation"]
+    ["a", { href: "./doc/connect4.pdf", target: "_blank" }, "Documentation"]
 ]
 // SuiWeb - End
 
